@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.4.3</version>
+		<relativePath/>
+	</parent>
+
+	<groupId>uz.greenwhite</groupId>
+	<artifactId>sb</artifactId>
+	<version>1.59.0</version>
+    <packaging>war</packaging>
+	<name>Smartup24</name>
+    <description>Smartup24 Project</description>
+	
+    <properties>
+        <java.version>21</java.version>
+        <biruni.version>8.19.4</biruni.version>
+        <scala.version>2.13.14</scala.version>
+    </properties>
+
+	<dependencies>
+		<dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scala.version}</version>
+        </dependency>
+
+		<dependency>
+            <groupId>uz.greenwhite</groupId>
+            <artifactId>biruni</artifactId>
+            <version>${biruni.version}</version>
+            <classifier>core</classifier>
+            <type>jar</type>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>uz.greenwhite</groupId>
+            <artifactId>biruni</artifactId>
+            <version>${biruni.version}</version>
+            <type>war</type>
+            <scope>provided</scope>
+        </dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>5.10.5</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-test</artifactId>
+			<version>3.3.5</version>
+			<scope>test</scope>
+		</dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+	<build>
+		<finalName>${project.artifactId}</finalName>
+
+		<resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <excludes>
+                    <exclude>**/*.properties.template</exclude>
+                    <exclude>**/ignored-directory/**</exclude>
+                </excludes>
+            </resource>
+        </resources>
+		
+		<plugins>
+			<plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>uz.greenwhite.biruni.BiruniApplication</mainClass>
+                    <classifier>exec</classifier>
+                </configuration>
+            </plugin>
+
+			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                  <execution>
+                    <id>create-core-jar</id>
+                    <phase>prepare-package</phase>
+                    <goals>
+                      <goal>jar</goal>
+                    </goals>
+                    <configuration>
+                      <finalName>sb-core</finalName>
+                      <outputDirectory>${project.build.directory}</outputDirectory>
+                    </configuration>
+                  </execution>
+                </executions>
+            </plugin>
+
+			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <warSourceDirectory>${project.build.directory}/${project.build.finalName}-core</warSourceDirectory>
+                    <archive>
+                        <addMavenDescriptor>false</addMavenDescriptor>
+                    </archive>
+                    <overlays>
+                        <overlay>
+                            <groupId>uz.greenwhite</groupId>
+                            <artifactId>biruni</artifactId>
+                            <type>war</type>
+                        </overlay>
+                    </overlays>
+                    <webResources>
+                        <resource>
+                            <directory>${project.basedir}/../page</directory>
+                            <targetPath>page</targetPath>
+                            <filtering>false</filtering>
+                        </resource>
+                        <resource>
+                            <directory>${project.build.directory}</directory>
+                            <includes>
+                              <include>sb-core.jar</include>
+                            </includes>
+                            <targetPath>WEB-INF/lib</targetPath>
+                            <filtering>false</filtering>
+                        </resource>
+                    </webResources>
+                    <packagingExcludes>WEB-INF/classes/**</packagingExcludes>
+                </configuration>
+            </plugin>
+			
+			<plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>4.9.1</version>
+                <executions>
+                    <execution>
+                        <id>scala-compile-first</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>scala-test-compile</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <args>
+                        <arg>-deprecation</arg>
+                        <arg>-feature</arg>
+                    </args>
+                    <scalaVersion>${scala.version}</scalaVersion>
+                    <sourceDir>src/main/scala</sourceDir>
+                    <testSourceDir>src/test/scala</testSourceDir>
+                    <jvmArgs>
+                        <jvmArg>-Xms64m</jvmArg>
+                        <jvmArg>-Xmx1024m</jvmArg>
+                    </jvmArgs>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <excludeTransitive>false</excludeTransitive>
+                            <stripVersion>false</stripVersion>
+                            <excludeScope>provided</excludeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+		</plugins>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>maven_central</id>
+			<name>Maven Central</name>
+			<url>https://repo.maven.apache.org/maven2/</url>
+		</repository>
+		<!-- The Biruni framework artifacts (uz.greenwhite:biruni core jar and war) are published in a
+		     private repository and are not available publicly; see README.md. -->
+	</repositories>
+    
+</project>
